@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: b4ed897770eb40b4ba37631c974aec7f
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - tilePrefab: {instanceID: 0}
+  - tileClass: {instanceID: 0}
+  - nameText: {instanceID: 0}
+  - costAText: {instanceID: 0}
+  - costBText: {instanceID: 0}
+  - forestBackground: {instanceID: 0}
+  - medievalBackground: {instanceID: 0}
+  - modernBackground: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
