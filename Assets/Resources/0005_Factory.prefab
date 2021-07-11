@@ -51,10 +51,12 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -79,6 +81,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &1044219550644542838
 GameObject:
   m_ObjectHideFlags: 0
@@ -160,14 +163,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 1044219550644542838}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8902759b1cdddae4c825e6a588582921, type: 3}
+  m_Script: {fileID: 11500000, guid: a8db8d77ce394594abca08ac7811c72b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   resourceCosts: 000000000000000000000000000000000000000000000000
-  resourceTurnGain: 000000000000000000000000000000000000000002000000
+  resourceTurnGain: 000000000000000000000000000000000000000000000000
   setName: Modern
   tileName: Factory
-  description: +2 Alloys per turn
+  description: 
   isBaseTile: 0
   unitToSpawn: {fileID: 0}
   owner: {fileID: 0}
@@ -178,3 +181,5 @@ MonoBehaviour:
   nextToTile: 0
   snappedTo: {fileID: 0}
   gameController: {fileID: 0}
+  startingHealthPoints: 20
+  healthtext: {fileID: 0}

@@ -358,4 +358,9 @@ public class GameController : MonoBehaviour
             player1.resourceTotalAmts[5] += player1.resourceTurnAmts[5];
         }
     }
+    
+    public void Surrender() {
+        if(activePlayerID == 0) EndGame(1);
+        else EndGame(0);
+    }
 }

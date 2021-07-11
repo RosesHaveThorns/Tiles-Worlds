@@ -91,8 +91,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9102692608103285971}
-  - component: {fileID: 7515631819785607622}
   - component: {fileID: 4623163097585931115}
+  - component: {fileID: 7515631819785607622}
   - component: {fileID: 4161406313039972739}
   m_Layer: 0
   m_Name: 0000_LoggingCamp
@@ -116,6 +116,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &4623163097585931115
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9102692608103520499}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 12.699999, y: 2, z: 12.699999}
+  m_Center: {x: -6.3, y: 3, z: -6.3}
 --- !u!114 &7515631819785607622
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -140,20 +153,7 @@ MonoBehaviour:
     useableByAll: 0
     useableWhenUnitOnTile: 1
   label: 
-  thisTileScript: {fileID: 0}
---- !u!65 &4623163097585931115
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9102692608103520499}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 12.699999, y: 2, z: 12.699999}
-  m_Center: {x: -6.3, y: 3, z: -6.3}
+  thisTileScript: {fileID: 4161406313039972739}
 --- !u!114 &4161406313039972739
 MonoBehaviour:
   m_ObjectHideFlags: 0

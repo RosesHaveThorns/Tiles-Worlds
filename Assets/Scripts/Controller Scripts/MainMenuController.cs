@@ -12,6 +12,15 @@ public class MainMenuController : MonoBehaviour
     public Text playerIDText;
 
     // Button Click Procedures
+    public void Quit() {
+        Debug.Log("QUITING NOW");
+    #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+    #else
+        Application.Quit();
+    #endif
+    }
+
     public void On2PlayerClick()
     {
         SceneManager.LoadScene(gameSceneName);  // Change to Game Scene

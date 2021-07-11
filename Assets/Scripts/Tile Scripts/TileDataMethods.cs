@@ -16,14 +16,13 @@ public class TileDataMethods
 
         string[] data = new string[20];
 
-        if (deck.Length == 0) // was wrong way around (!=)
+        if (deck.Length == 0)
         {
             // deserialize function cant work if file empty, so must avoid that here
             data[0] = "null";
         }
         else
         {
-            Debug.Log(deck[0]);
             data = DeckToStringArray(deck);
         }
 
