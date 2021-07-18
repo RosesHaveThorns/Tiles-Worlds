@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,6 +9,8 @@ public class DeckTileInfoUpdate : MonoBehaviour
     // required components and objects a
     public GameObject tilePrefab;
     public TileMain tileClass;
+
+    private DataRow tileData;
 
     public Text nameText;
     public Text costAText;
@@ -36,7 +39,7 @@ public class DeckTileInfoUpdate : MonoBehaviour
         }
     }
 
-    public void SetupControllerVars()   // This msut be done separetley so that the sceneController can be set first
+    public void SetupVars()   // This msut be done separetley so that the sceneController can be set first
     {
         // Get the tile list controller, attempting the editMenu verson, then the MainMneu one
         eMenuTileListController = sceneController.GetComponent<EditMenuTileListController>();
@@ -54,20 +57,33 @@ public class DeckTileInfoUpdate : MonoBehaviour
                 Debug.LogError("Neither a MainMenuTileListController or a EditMenuTileListCOntroller could be found");
             }
         }
-    }
 
-    public void UpdateUI()
-    {
-        tileClass = tilePrefab.GetComponent<TileMain>(); // The code must be namaed teh same as the tile name without the code
+        // update all data using database data
+
+		tileClass = tilePrefab.GetComponent<TileMain>();
 
         if (tileClass == null)
         {
             Debug.LogError("No TileClass Found, Looking for: " + tilePrefab.name.Split('_')[1]);
         }
 
+		tileClass.tileName = System.Convert.ToString(tileData["name"]);
+		tileClass.description = System.Convert.ToString(tileData["description"]);
+		tileClass.setName = System.Convert.ToString(tileData["in_set"]);
+
+		tileClass.resourceCosts[0] = System.Convert.ToInt32(tileData["cost_resource_1"]);
+		tileClass.resourceCosts[1] = System.Convert.ToInt32(tileData["cost_resource_2"]);
+
+		tileClass.resourceTurnGain[0] = System.Convert.ToInt32(tileData["turngain_resource_1"]);
+		tileClass.resourceTurnGain[1] = System.Convert.ToInt32(tileData["turngain_resource_1"]);
+    }
+
+    public void UpdateUI()
+    {
         nameText.text = tileClass.tileName;
 
-        // Set cost amounts based on set    // WILL ADD ART CHANGES IN FUTURE
+        // todo: use tile_sets database for this
+        // Set cost amounts based on set
         if (tileClass.setName == "Forest")
         {
             costAText.text = "-" + tileClass.resourceCosts[0].ToString();
@@ -101,5 +117,13 @@ public class DeckTileInfoUpdate : MonoBehaviour
         {
             mMenuTileListController.RemoveDeckTile(this.gameObject);
         }
+    }
+
+    public void SetTileData(DataRow dat) {
+        tileData = dat;
+    }
+
+    public DataRow GetTileData() {
+        return tileData;
     }
 }
