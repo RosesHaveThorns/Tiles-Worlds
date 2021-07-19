@@ -29,10 +29,8 @@ public class EditMenuController : MonoBehaviour
         {
             Debug.LogError("Unexpected player ID in tile controller");
         }
-
-        tileController.deckList = TileDataMethods.LoadDeck(tileController.allTiles, tileController.playerID);
+        
         tileController.UpdateDeckUI();
-
         playerIDText.text = "Player: " + tileController.playerID;
     }
 }

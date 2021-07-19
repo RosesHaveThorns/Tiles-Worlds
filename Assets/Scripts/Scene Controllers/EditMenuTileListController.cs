@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using System.Data;
 using UnityEngine.UI;
 
 public class EditMenuTileListController : MonoBehaviour
@@ -11,10 +12,11 @@ public class EditMenuTileListController : MonoBehaviour
     private Button prevButtonComponent;
     private Button nextButtonComponent;
 
-    // Main Tile Arrays/Lists
-    public GameObject[] allTiles;
-    public GameObject[] deckList = new GameObject[20];
-    public List<GameObject> collection;
+    // Main Tile Arrays/Lists    
+    public DataTable allTiles;
+    public DataTable deckList;
+    private DataTable collection;
+    private Dictionary<int, GameObject> tile_prefabs = new Dictionary<int, GameObject>(); // key is tile id (from first 4 chars of gameobject name), should be same as in database
 
     // Collection UI Lists
     public GameObject collectionLeftUI;
@@ -33,13 +35,10 @@ public class EditMenuTileListController : MonoBehaviour
 
     public GameObject tileInfoPrefab;
 
-    // !!! Deck UI
+    // Deck UI
     public GameObject deckUI;
-
     private GameObject deckUIGrid;
-
     private GameObject[] shownDeckTiles = new GameObject[20]; // used for keeping track of gameobjects for deleting
-
     public GameObject tileInfoDeckPrefab;
 
     public int playerID = 0;
@@ -57,47 +56,24 @@ public class EditMenuTileListController : MonoBehaviour
 
         deckUIGrid = deckUI.transform.Find("P_Grid").gameObject;
 
-        // Load all Tile prefabs from Resources and sort them by code
-        Object[] loaded = Resources.LoadAll("", typeof(GameObject));
-        allTiles = new GameObject[loaded.Length];
+        // load all tile prefabs from Resources folder to tile_prefabs dict
+        LoadTilePrefabs();
 
-        int x = 0;
-        foreach (GameObject tile in loaded)
-        {
-            allTiles[x] = tile;
-            x++;
-        }
+         // Load all tiles and collection data from database
+        DatabaseReader dbReader = new DatabaseReader();
 
-        // load deck from file, try twice, if faled first time, attempt to create an empty deck file
-        deckList = TileDataMethods.LoadDeck(allTiles, playerID);
+        allTiles = dbReader.query("SELECT * FROM tiles_library");
 
-        if(deckList == null)
-        {
-            deckList = TileDataMethods.LoadDeck(allTiles, playerID); // Attempt a second try, as LoadDeck should have created a new save file
-            if(deckList == null)
-            {
-                Debug.LogError("Second Attempt To Load Deck Failed");
-            }
-        }
+        dbReader.close();
 
-        // load collection from file, try twice, if faled first time, attempt to create an empty collection file
-
-        collection = TileDataMethods.LoadCollection(allTiles);
-
-        if (collection == null)
-        {
-            collection = TileDataMethods.LoadCollection(allTiles); // Attempt a second try, as LoadCollection should have created a new save file
-            if (collection == null)
-            {
-                Debug.LogError("Second Attempt To Load Collection Failed");
-            }
-        }
+        // load collection 
+        loadCollection();
 
         // Set prev and next page buttons' interactability (always starts on first page)
         prevButtonComponent.interactable = false;
 
         // Allow next button interactability if more pages are needed
-        if (collection.Count > pageMaxTile)
+        if (collection.Rows.Count > pageMaxTile)
         {
             nextButtonComponent.interactable = true;
         }
@@ -113,7 +89,7 @@ public class EditMenuTileListController : MonoBehaviour
 
     public void NextPage()
     {
-        if (collection.Count > pageMaxTile) // Only show pages needed, dont show empty pages
+        if (collection.Rows.Count > pageMaxTile) // Only show pages needed, dont show empty pages
         {
             collectionPage++;
             pageMaxTile = pageMaxTile + 28;
@@ -123,7 +99,7 @@ public class EditMenuTileListController : MonoBehaviour
         }
 
         // Allow button interactability if more pages are needed
-        if (collection.Count > pageMaxTile)
+        if (collection.Rows.Count > pageMaxTile)
         {
             nextButtonComponent.interactable = true;
         }
@@ -157,9 +133,29 @@ public class EditMenuTileListController : MonoBehaviour
         }
     }
 
+    private void LoadTilePrefabs() {
+        Object[] loaded = Resources.LoadAll("", typeof(GameObject));
+
+        foreach (GameObject tile in loaded)
+        {
+
+            int id;
+            bool success = int.TryParse(tile.gameObject.name.Substring(0, 4), out id);
+
+            if (!success) {
+                Debug.LogError("Failed to parse tile ID from prefab name");
+            }
+
+            tile_prefabs.Add(id, tile);
+        }
+    }
+
 
     public void UpdateDeckUI()
     {
+        // reload deck incase of change
+        loadDeck(playerID);
+
         // remove old tileinfo prefabs
         foreach (GameObject infoPanel in shownDeckTiles)
         {
@@ -167,34 +163,33 @@ public class EditMenuTileListController : MonoBehaviour
         }
 
         // Add new tileInfo prefabs
-        for (int i = 0; i < deckList.Length; i++)   // deckList.Length should be 20, bu this saves me time if I change it in the future
+        for (int i = 0; i < deckList.Rows.Count; i++)   // deckList.Length should be 20, bu this saves me time if I change it in the future
         {
-            if (deckList[i] != null) // check if there is a tile in the element
+            shownDeckTiles[i] = Instantiate(tileInfoDeckPrefab);
+
+            DeckTileInfoUpdate updater = shownDeckTiles[i].GetComponent<DeckTileInfoUpdate>();
+
+            if (updater == null)
             {
-                shownDeckTiles[i] = Instantiate(tileInfoDeckPrefab);
-
-                DeckTileInfoUpdate updater = shownDeckTiles[i].GetComponent<DeckTileInfoUpdate>();
-
-                if (updater == null)
-                {
-                    Debug.LogError("UI Updater could not be found on tile when adding to deck UI: " + shownDeckTiles[i].name);
-                }
-
-                updater.tilePrefab = deckList[i];   // Sets the tilePrefab to the correct tile in the collection
-                updater.sceneController = this.gameObject;
-                updater.SetupVars();
-
-                updater.UpdateUI();
-
-                shownDeckTiles[i].transform.SetParent(deckUIGrid.transform);
-                shownDeckTiles[i].transform.localScale = new Vector3(1f, 1f, 1f); // The prefabs scale up to 1.2851, so this scales them back down
-
+                Debug.LogError("UI Updater could not be found on tile when adding to deck UI: " + shownDeckTiles[i].name);
             }
+
+            updater.tilePrefab = tile_prefabs[System.Convert.ToInt32(deckList.Rows[i]["id"])];   // Sets the tilePrefab to the correct tile in the deck
+            updater.SetTileData(deckList.Rows[i]);
+            updater.sceneController = this.gameObject;
+            updater.SetupVars();
+
+            updater.UpdateUI();
+
+            shownDeckTiles[i].transform.SetParent(deckUIGrid.transform);
+            shownDeckTiles[i].transform.localScale = new Vector3(1f, 1f, 1f); // The prefabs scale up to 1.2851, so this scales them back down
         }
     }
 
     private void UpdateCollectionUI()
     {
+        // reload collection
+        loadCollection();
 
         // Remove old tileinfos
         foreach(GameObject infoPanel in shownLeftCollectionTiles)
@@ -208,7 +203,7 @@ public class EditMenuTileListController : MonoBehaviour
         }
 
         // Add new tileInfos
-        int tilesOnPage = collection.Count - (12 + 28 * (collectionPage - 2));  // calculates how many tiles there are left to show
+        int tilesOnPage = collection.Rows.Count - (12 + 28 * (collectionPage - 2));  // calculates how many tiles there are left to show
 
         if (tilesOnPage > 28)   // If there are more than 28 tiles left to show
         {
@@ -240,7 +235,8 @@ public class EditMenuTileListController : MonoBehaviour
                 Debug.LogError("UI Updater could not be found on tile when adding to colleciton UI: " + shownLeftCollectionTiles[i].name);
             }
 
-            updater.tilePrefab = collection[pageMinTile + i - 1];   // Sets the tilePrefab to the correct tile in the collection
+            updater.tilePrefab = tile_prefabs[System.Convert.ToInt32(collection.Rows[pageMinTile + i - 1]["id"])];   // Sets the tilePrefab to the correct tile in the deck
+            updater.SetTileData(collection.Rows[pageMinTile + i - 1]);
             updater.sceneController = this.gameObject;
             updater.SetupVars();
 
@@ -261,7 +257,8 @@ public class EditMenuTileListController : MonoBehaviour
                 Debug.LogError("UI Updater could not be found on tile when adding to colleciton UI: " + shownLeftCollectionTiles[j].name);
             }
 
-            updater.tilePrefab = collection[pageMinTile + 16 + j - 1];   // Sets the tilePrefab to the correct tile in the collection
+            updater.tilePrefab = tile_prefabs[System.Convert.ToInt32(collection.Rows[pageMinTile + 16 + j - 1]["id"])];   // Sets the tilePrefab to the correct tile in the deck
+            updater.SetTileData(collection.Rows[pageMinTile + 16 + j - 1]);
             updater.sceneController = this.gameObject;
             updater.SetupVars();
 
@@ -280,23 +277,14 @@ public class EditMenuTileListController : MonoBehaviour
             Debug.LogError("No tile Info Updater Script Found");
         }
 
-        bool found = false;
-        for (int i = 0; i < 20; i++)
-        {
-            if (deckList[i] == updater.tilePrefab)
-            {
-                deckList[i] = null;
-                found = true;
-                break;
-            }
-        }
-        if (found == false)
-        {
-            Debug.LogError("Tile not found in deck");
-        }
+        // delete from database
+        DatabaseReader db = new DatabaseReader();
 
-        // Save and Update
-        TileDataMethods.SaveDeck(deckList, playerID);
+        if(playerID == 0) db.nonQuery("DELETE FROM deck_player1 WHERE num = " + updater.GetTileData()["num"]);
+        else db.nonQuery("DELETE FROM deck_player2 WHERE num = " + updater.GetTileData()["num"]);
+
+        db.close();
+
         UpdateDeckUI();
     }
 
@@ -308,26 +296,39 @@ public class EditMenuTileListController : MonoBehaviour
 			Debug.LogError("No tile Info Updater Script Found");
 		}
 
-		// Find Empty Spot
-		bool found = false;
-		for (int i = 0; i < 20; i++)
-		{
-			if(deckList[i] == null)
-			{
-				deckList[i] = updater.tilePrefab;
-				found = true;
-				break;
-			}
-		}
+        if(deckList.Rows.Count < 20)
+        {
+            // Add to database
+            DatabaseReader db = new DatabaseReader();
 
-		// If Full
-		if (found == false)
-		{
+            if(playerID == 0) db.nonQuery("INSERT INTO deck_player1 (tile_id) VALUES (" + updater.GetTileData()["id"] + ")");
+            else  db.nonQuery("INSERT INTO deck_player2 (tile_id) VALUES (" + updater.GetTileData()["id"] + ")");
+
+            db.close();
+        }
+        else {
 			Debug.LogError("Deck is Full");
 		}
 
-		// Save and Update
-		TileDataMethods.SaveDeck(deckList,playerID);
 		UpdateDeckUI();
 	}
+
+        private void loadDeck(int playerID) {
+            // Read deck from database
+            DatabaseReader db = new DatabaseReader();
+
+            if(playerID == 0) deckList = db.query("SELECT deck_player1.num, tiles_library.* FROM tiles_library INNER JOIN deck_player1 ON tiles_library.id = deck_player1.tile_id");
+            else deckList = db.query("SELECT deck_player2.num, tiles_library.* FROM tiles_library INNER JOIN deck_player2 ON tiles_library.id = deck_player2.tile_id");
+
+            db.close();
+    }
+
+        private void loadCollection() {
+            // Read collection from database
+            DatabaseReader db = new DatabaseReader();
+
+            collection = db.query("SELECT tiles_library.* FROM tiles_library INNER JOIN collection ON tiles_library.id = collection.tile_id");
+
+            db.close();
+    }
 }

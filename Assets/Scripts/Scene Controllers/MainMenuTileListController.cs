@@ -5,7 +5,7 @@ using UnityEngine;
 public class MainMenuTileListController : MonoBehaviour
 {
     // Main Tile Arrays/Lists
-    public DataTable allTiles;  // Set length to amount of tiles to be added
+    public DataTable allTiles;
     public DataTable deckList;
     private DataTable collection;
     private Dictionary<int, GameObject> tile_prefabs = new Dictionary<int, GameObject>(); // key is tile id (from first 4 chars of gameobject name), should be same as in database
@@ -30,7 +30,6 @@ public class MainMenuTileListController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
         // Get UI grids
         collectionUIGrid = collectionUI.transform.Find("P_Grid").gameObject;
         deckUIGrid = deckUI.transform.Find("P_Grid").gameObject;
@@ -39,7 +38,6 @@ public class MainMenuTileListController : MonoBehaviour
         LoadTilePrefabs();
 
         // Load all tiles and collection data from database
-
         DatabaseReader dbReader = new DatabaseReader();
 
         allTiles = dbReader.query("SELECT * FROM tiles_library");
@@ -47,7 +45,6 @@ public class MainMenuTileListController : MonoBehaviour
         dbReader.close();
 
         // Update UI lists after loading
-
         UpdateCollectionUI();
         UpdateDeckUI();
     }
@@ -156,30 +153,13 @@ public class MainMenuTileListController : MonoBehaviour
             Debug.LogError("No tile Info Updater Script Found");
         }
 
-		// // Find tile in deck and remove
-        // bool found = false;
-        // for (int i = 0; i < 20 && i < deckList.Rows.Count && !found; i++)
-        // {
+        // delete from database
+        DatabaseReader db = new DatabaseReader();
 
-        //     if(tile_prefabs[System.Convert.ToInt32(deckList.Rows[i]["id"])] == )
-        //     {
-        //         DataRow tiledata = deckList.Rows[i];
+        if(playerID == 0) db.nonQuery("DELETE FROM deck_player1 WHERE num = " + updater.GetTileData()["num"]);
+        else db.nonQuery("DELETE FROM deck_player2 WHERE num = " + updater.GetTileData()["num"]);
 
-                // delete from database
-                DatabaseReader db = new DatabaseReader();
-
-                if(playerID == 0) db.nonQuery("DELETE FROM deck_player1 WHERE num = " + updater.GetTileData()["num"]);
-                else db.nonQuery("DELETE FROM deck_player2 WHERE num = " + updater.GetTileData()["num"]);
-
-                db.close();
-
-        //         found = true;
-        //     }
-        // }
-        // if (found == false)
-        // {
-        //     Debug.LogError("Tile not found in deck");
-        // }
+        db.close();
 
         UpdateDeckUI();
     }
