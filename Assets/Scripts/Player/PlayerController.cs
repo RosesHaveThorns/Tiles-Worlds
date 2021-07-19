@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Data;
 using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
@@ -33,11 +34,11 @@ public class PlayerController : MonoBehaviour
     // Game State Variables
     public bool activePlayer = false;
 
-    private GameObject[] allTiles;
-    public GameObject[] deckList = new GameObject[20];  // Original Deck Before Drawing
+    private DataTable allTiles;
+    public DataTable deckList;  // Original Deck Before Drawing
 
-    public GameObject[] hand = new GameObject[5];
-    public List<GameObject> gameDeck = new List<GameObject>();  // Cards still in deck, List for random drawing
+    public DataTable hand;
+    public DataTable gameDeck;  // Cards still in deck, List for random drawing
 
     private void Awake()
     {
